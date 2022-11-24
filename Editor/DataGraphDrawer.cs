@@ -127,7 +127,7 @@ namespace GBG.EditorDataGraph.Editor
                     if (!hover && (mousePos - lineEnd).sqrMagnitude <= radius * radius * 1.5f * 1.5f)
                     {
                         hover = true;
-                        hoverData = lineEnd;
+                        hoverData = dataList[i];
                         hoverColor = dataList.Color;
                         Handles.DrawSolidDisc(lineEnd, normal, radius * 1.5f);
                     }
