@@ -7,7 +7,7 @@ namespace GBG.EditorDataGraph.Editor
 {
     public class DataGraphWindow2D : EditorWindow
     {
-        [MenuItem("Tools/Editor Data Graph/2D Graph")]
+        [MenuItem("Tools/Bamboo/Editor Data Graph/2D Graph")]
         public static DataGraphWindow2D Open()
         {
             return GetWindow<DataGraphWindow2D>("Data Graph 2D");
