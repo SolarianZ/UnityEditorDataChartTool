@@ -28,6 +28,8 @@ namespace GBG.EditorDataGraph.Editor
 
         private GUIStyle _rightAlignedLabelStyle;
 
+        private GUIStyle _centerAlignedLabelStyle;
+
 
         public DataGraphDrawer(List<DataList> dataTable)
         {
@@ -58,12 +60,12 @@ namespace GBG.EditorDataGraph.Editor
         {
             var baseColor = GetBaseColor();
             var originalGuiColor = GUI.color;
+            PrepareLabelStyles();
 
-            // Ranges
+            // Find min and max values of x and y
             _dataBounds = GetDataBounds();
 
-            // Axes
-            PrepareAxisLabelStyles();
+            // Draw axes
             Handles.color = baseColor;
 
             // X axis
@@ -97,7 +99,10 @@ namespace GBG.EditorDataGraph.Editor
             GUIUtility.RotateAroundPivot(-90, yEndLabelPos.position);
             GUI.color = originalGuiColor;
 
-            // Data lines
+            // Draw data lines
+            var hover = false;
+            var hoverData = Vector2.zero;
+            var hoverColor = Color.black;
             foreach (var dataList in _dataTable)
             {
                 if (!dataList.Enabled || dataList.Count == 0)
@@ -106,26 +111,44 @@ namespace GBG.EditorDataGraph.Editor
                 }
 
                 var normal = Vector3.forward;
-                var from = Vector3.up;
-                var angle = 360f;
                 var radius = _pointRadius.value;
                 Handles.color = dataList.Color;
 
                 var firstPoint = TransformPoint(dataList[0]);
-                Handles.DrawSolidArc(firstPoint, normal, from, angle, radius);
+                Handles.DrawSolidDisc(firstPoint, normal, radius);
 
                 for (var i = StartIndex + 1; i < dataList.Count && i <= EndIndex; i++)
                 {
                     var lineStart = TransformPoint(dataList[i - 1]);
                     var lineEnd = TransformPoint(dataList[i]);
-                    Handles.DrawSolidArc(lineEnd, normal, from, angle, radius);
                     Handles.DrawLine(lineStart, lineEnd);
-                    Handles.DrawPolyLine();
+
+                    var mousePos = Event.current.mousePosition;
+                    if (!hover && (mousePos - lineEnd).sqrMagnitude <= radius * radius * 1.5f * 1.5f)
+                    {
+                        hover = true;
+                        hoverData = lineEnd;
+                        hoverColor = dataList.Color;
+                        Handles.DrawSolidDisc(lineEnd, normal, radius * 1.5f);
+                    }
+                    else
+                    {
+                        Handles.DrawSolidDisc(lineEnd, normal, radius);
+                    }
                 }
+            }
+
+            if (hover)
+            {
+                var hoverLabelPos = (xAxisStart + xAxisEnd) / 2 - new Vector2(axisLabelSize.x / 2, 0);
+                var hoverLabelRectPos = new Rect(hoverLabelPos, axisLabelSize);
+                GUI.color = hoverColor;
+                GUI.Label(hoverLabelRectPos, $"({hoverData.x:F5}, {hoverData.y:F5})", _centerAlignedLabelStyle);
+                GUI.color = originalGuiColor;
             }
         }
 
-        private void PrepareAxisLabelStyles()
+        private void PrepareLabelStyles()
         {
             if (_leftAlignedLabelStyle == null)
             {
@@ -135,6 +158,11 @@ namespace GBG.EditorDataGraph.Editor
             if (_rightAlignedLabelStyle == null)
             {
                 _rightAlignedLabelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight };
+            }
+
+            if (_centerAlignedLabelStyle == null)
+            {
+                _centerAlignedLabelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter };
             }
         }
 

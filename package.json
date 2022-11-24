@@ -4,9 +4,9 @@
   "displayName": "Editor Data Graph!",
   "description": "Editor data graph tool.",
   "unity": "2021.3",
-  "documentationUrl": "",
-  "changelogUrl": "",
-  "licensesUrl": "",
+  "documentationUrl": "https://github.com/SolarianZ/UnityEditorDataGraphTool/blob/main/README.md",
+  "changelogUrl": "https://github.com/SolarianZ/UnityEditorDataGraphTool/releases",
+  "licensesUrl": "https://github.com/SolarianZ/UnityEditorDataGraphTool/blob/main/LICENSE",
   "keywords": [],
   "author": {
     "name": "GBG",
