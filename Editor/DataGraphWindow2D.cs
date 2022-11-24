@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -18,6 +16,14 @@ namespace GBG.EditorDataGraph.Editor
 
         private readonly List<DataList> _dataTable = new List<DataList>();
 
+        private ListView _dataListView;
+
+        private DataGraphDrawer _graphDrawer;
+
+        private MinMaxSlider _dataRangeSlider;
+
+
+        #region Data Management
 
         public void SetColor(string category, Color color)
         {
@@ -63,10 +69,16 @@ namespace GBG.EditorDataGraph.Editor
 
             dataList.Add(data);
 
-            if (!newDataList)
+            if (newDataList)
+            {
+                _dataListView.RefreshItems();
+            }
+            else
             {
                 _dataListView.RefreshItem(dataListIndex);
             }
+
+            OnDataListChanged(dataList.Count, false);
         }
 
         public void AddData(string category, float x, float y)
@@ -74,7 +86,7 @@ namespace GBG.EditorDataGraph.Editor
             AddData(category, new Vector2(x, y));
         }
 
-        public bool RemoveData(string category, int index, bool keepEmptyCategory)
+        public bool RemoveData(string category, int index)
         {
             var dataListIndex = _dataTable.FindIndex(list => list.Category == category);
             if (dataListIndex < 0)
@@ -82,19 +94,24 @@ namespace GBG.EditorDataGraph.Editor
                 return false;
             }
 
-            _dataTable[dataListIndex].RemoveAt(index);
-            if (!keepEmptyCategory && _dataTable[dataListIndex].Count == 0)
+            var dataList = _dataTable[dataListIndex];
+            dataList.RemoveAt(index);
+            if (_dataTable[dataListIndex].Count == 0)
             {
                 _dataTable.RemoveAt(dataListIndex);
-                return true;
+                _dataListView.RefreshItems();
+            }
+            else
+            {
+                _dataListView.RefreshItem(dataListIndex);
             }
 
-            _dataListView.RefreshItem(dataListIndex);
+            OnDataListChanged(dataList.Count, true);
 
             return true;
         }
 
-        public bool ClearData(string category, bool removeCategory)
+        public bool ClearData(string category)
         {
             var dataListIndex = _dataTable.FindIndex(list => list.Category == category);
             if (dataListIndex < 0)
@@ -102,37 +119,58 @@ namespace GBG.EditorDataGraph.Editor
                 return false;
             }
 
-            if (removeCategory)
-            {
-                _dataTable.RemoveAt(dataListIndex);
-                return true;
-            }
-
-            _dataTable[dataListIndex].Clear();
-            _dataListView.RefreshItem(dataListIndex);
+            _dataTable.RemoveAt(dataListIndex);
+            OnDataListChanged(0, true);
 
             return true;
         }
 
-        public void ClearAllData(bool clearCategories)
+        public void ClearAllData()
         {
-            if (clearCategories)
-            {
-                _dataTable.Clear();
-                return;
-            }
-
-            foreach (var dataList in _dataTable)
-            {
-                dataList.Clear();
-            }
+            _dataTable.Clear();
+            OnDataListChanged(0, true);
         }
 
 
-        private ListView _dataListView;
+        private void OnDataListChanged(int dataCount, bool isDataRemoved)
+        {
+            var oldHighLimit = (int)_dataRangeSlider.highLimit;
+            var newHighLimit = oldHighLimit;
+            if (isDataRemoved || dataCount < 1)
+            {
+                var maxCount = 0;
+                foreach (var dataList in _dataTable)
+                {
+                    if (maxCount < dataList.Count)
+                    {
+                        maxCount = dataList.Count;
+                    }
+                }
 
-        private DataGraphDrawer _graphDrawer;
+                newHighLimit = maxCount > 0 ? maxCount - 1 : 0;
+            }
+            else if (oldHighLimit < dataCount - 1)
+            {
+                newHighLimit = dataCount - 1;
+            }
 
+            var maxValue = _dataRangeSlider.maxValue;
+            _dataRangeSlider.highLimit = newHighLimit;
+
+            if (maxValue > newHighLimit)
+            {
+                _dataRangeSlider.maxValue = newHighLimit;
+            }
+            else if (Mathf.RoundToInt(maxValue) == oldHighLimit)
+            {
+                _dataRangeSlider.maxValue = newHighLimit;
+            }
+        }
+
+        #endregion
+
+
+        #region Lifecycle
 
         private void OnEnable()
         {
@@ -152,6 +190,10 @@ namespace GBG.EditorDataGraph.Editor
 
             _graphDrawer = new DataGraphDrawer(_dataTable);
             rootVisualElement.Add(_graphDrawer);
+
+            _dataRangeSlider = new MinMaxSlider("Range", 0, 1, 0, 1);
+            _dataRangeSlider.RegisterValueChangedCallback(OnDataRangeChanged);
+            rootVisualElement.Add(_dataRangeSlider);
         }
 
         private void Update()
@@ -169,5 +211,21 @@ namespace GBG.EditorDataGraph.Editor
             var dataListLabel = (DataListLabel)element;
             dataListLabel.SetTarget(_dataTable[index]);
         }
+
+        private void OnDataRangeChanged(ChangeEvent<Vector2> evt)
+        {
+            _graphDrawer.StartIndex = (ushort)Mathf.RoundToInt(evt.newValue.x);
+            _graphDrawer.EndIndex = (ushort)Mathf.RoundToInt(evt.newValue.y);
+            _dataRangeSlider.label = GetDataRangeSliderLabel();
+        }
+
+        private string GetDataRangeSliderLabel()
+        {
+            var minValue = Mathf.RoundToInt(_dataRangeSlider.minValue);
+            var maxValue = Mathf.RoundToInt(_dataRangeSlider.maxValue);
+            return $"Range[{minValue.ToString()},{maxValue.ToString()}]";
+        }
+
+        #endregion
     }
 }

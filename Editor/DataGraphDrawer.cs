@@ -1,21 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
 namespace GBG.EditorDataGraph.Editor
 {
+    // TODO FIXME: Can't show horizontal linear
     internal class DataGraphDrawer : VisualElement
     {
+        public ushort StartIndex { get; set; } = 0;
+
+        public ushort EndIndex { get; set; } = ushort.MaxValue;
+
+
         private readonly List<DataList> _dataTable;
 
         public readonly SliderInt _pointRadius;
 
         private Rect _graphBounds;
 
-        private Rect _DataBounds;
+        private Rect _dataBounds;
+
+        private GUIStyle _leftAlignedLabelStyle;
+
+        private GUIStyle _rightAlignedLabelStyle;
 
 
         public DataGraphDrawer(List<DataList> dataTable)
@@ -45,10 +56,48 @@ namespace GBG.EditorDataGraph.Editor
 
         private void DrawDataGraph()
         {
-            // Ranges
-            _DataBounds = GetDataBounds();
+            var baseColor = GetBaseColor();
+            var originalGuiColor = GUI.color;
 
-            // Draw lines
+            // Ranges
+            _dataBounds = GetDataBounds();
+
+            // Axes
+            PrepareAxisLabelStyles();
+            Handles.color = baseColor;
+
+            // X axis
+            var xAxisStart = TransformPoint(new Vector2(_dataBounds.xMin, _dataBounds.yMin));
+            var xAxisEnd = TransformPoint(new Vector2(_dataBounds.xMax, _dataBounds.yMin));
+            Handles.DrawLine(xAxisStart, xAxisEnd);
+
+            // X axis labels
+            var axisLabelSize = new Vector2(200, 20);
+            GUI.color = baseColor;
+            var xStartLabelPos = new Rect(xAxisStart, axisLabelSize);
+            GUI.Label(xStartLabelPos, _dataBounds.xMin.ToString(CultureInfo.InvariantCulture), _leftAlignedLabelStyle);
+            var xEndLabelPos = new Rect(xAxisEnd - new Vector2(axisLabelSize.x, 0), axisLabelSize);
+            GUI.Label(xEndLabelPos, _dataBounds.xMax.ToString(CultureInfo.InvariantCulture), _rightAlignedLabelStyle);
+            GUI.color = originalGuiColor;
+
+            // Y axis
+            var yAxisStart = TransformPoint(new Vector2(_dataBounds.xMin, _dataBounds.yMin));
+            var yAxisEnd = TransformPoint(new Vector2(_dataBounds.xMin, _dataBounds.yMax));
+            Handles.DrawLine(yAxisStart, yAxisEnd);
+
+            // Y axis labels
+            GUI.color = baseColor;
+            var yStartLabelPos = new Rect(yAxisStart - new Vector2(0, axisLabelSize.x), axisLabelSize);
+            GUIUtility.RotateAroundPivot(90, yStartLabelPos.position);
+            GUI.Label(yStartLabelPos, _dataBounds.yMin.ToString(CultureInfo.InvariantCulture), _rightAlignedLabelStyle);
+            GUIUtility.RotateAroundPivot(-90, yStartLabelPos.position);
+            var yEndLabelPos = new Rect(yAxisEnd, axisLabelSize);
+            GUIUtility.RotateAroundPivot(90, yEndLabelPos.position);
+            GUI.Label(yEndLabelPos, _dataBounds.yMax.ToString(CultureInfo.InvariantCulture), _leftAlignedLabelStyle);
+            GUIUtility.RotateAroundPivot(-90, yEndLabelPos.position);
+            GUI.color = originalGuiColor;
+
+            // Data lines
             foreach (var dataList in _dataTable)
             {
                 if (!dataList.Enabled || dataList.Count == 0)
@@ -65,7 +114,7 @@ namespace GBG.EditorDataGraph.Editor
                 var firstPoint = TransformPoint(dataList[0]);
                 Handles.DrawSolidArc(firstPoint, normal, from, angle, radius);
 
-                for (var i = 1; i < dataList.Count; i++)
+                for (var i = StartIndex + 1; i < dataList.Count && i <= EndIndex; i++)
                 {
                     var lineStart = TransformPoint(dataList[i - 1]);
                     var lineEnd = TransformPoint(dataList[i]);
@@ -73,6 +122,19 @@ namespace GBG.EditorDataGraph.Editor
                     Handles.DrawLine(lineStart, lineEnd);
                     Handles.DrawPolyLine();
                 }
+            }
+        }
+
+        private void PrepareAxisLabelStyles()
+        {
+            if (_leftAlignedLabelStyle == null)
+            {
+                _leftAlignedLabelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft };
+            }
+
+            if (_rightAlignedLabelStyle == null)
+            {
+                _rightAlignedLabelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleRight };
             }
         }
 
@@ -86,8 +148,12 @@ namespace GBG.EditorDataGraph.Editor
 
             foreach (var dataList in _dataTable)
             {
-                foreach (var point in dataList)
+                var dataCount = dataList.Count;
+                Assert.IsTrue(StartIndex <= EndIndex);
+
+                for (var i = StartIndex; i < dataCount && i <= EndIndex; i++)
                 {
+                    var point = dataList[i];
                     hasPoint = true;
                     if (xMin == null || xMin > point.x) xMin = point.x;
                     if (xMax == null || xMax < point.x) xMax = point.x;
@@ -106,11 +172,11 @@ namespace GBG.EditorDataGraph.Editor
 
         private Vector2 TransformPoint(Vector2 point, bool lockAspect = false)
         {
-            var xScale = _graphBounds.width / _DataBounds.width;
-            var yScale = _graphBounds.height / _DataBounds.height;
+            var xScale = _graphBounds.width / _dataBounds.width;
+            var yScale = _graphBounds.height / _dataBounds.height;
             var scale = lockAspect ? Vector2.one * Math.Min(xScale, yScale) : new Vector2(xScale, yScale);
             scale.y *= -1;
-            var offset = point - _DataBounds.center;
+            var offset = point - _dataBounds.center;
             offset.Scale(scale);
 
             // Don't use windowBounds.center, transform point to window center
@@ -118,6 +184,11 @@ namespace GBG.EditorDataGraph.Editor
             var windowSpacePoint = windowCenter + offset;
 
             return windowSpacePoint;
+        }
+
+        private Color GetBaseColor()
+        {
+            return EditorGUIUtility.isProSkin ? Color.white : Color.black;
         }
     }
 }
