@@ -2,12 +2,13 @@
 
 Draw data chart in Unity Editor.
 
-![Example](./Documents~/imgs/example_2d.png)
+![Example](./Documents~/imgs/example_line_chart_2d.png)
 
+[中文](./README_CN.md)
 
 ## API
 
-- class DataChartWindow2D
+- class LineChart2DWindow
     - static void Open(string title): Open data chart window.
     - void SetColor(string category, Color color): Set the color of the category.
     - void AddData(string category, Vector2 data): Add data to category.
@@ -18,3 +19,4 @@ Draw data chart in Unity Editor.
     - int FindDataLastIndex(string category, Predicate<Vector2> match): Find the last index of the data in category.
     - void SetChartScale(float xValueLength, float yMinValue, float yMaxValue): Set visible value range of the chart.
     - void RemoveChartScale(): Remove visible value range of the chart.
+
