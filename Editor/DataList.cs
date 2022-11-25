@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace GBG.EditorDataGraph.Editor
@@ -10,7 +11,7 @@ namespace GBG.EditorDataGraph.Editor
 
         public bool Enabled { get; set; } = true;
 
-        public Color Color { get; set; } = Color.white;
+        public Color Color { get; set; } = EditorGUIUtility.isProSkin ? Color.white : Color.black;
 
         public int Count => _dataList.Count;
 
@@ -21,8 +22,6 @@ namespace GBG.EditorDataGraph.Editor
         }
 
         private readonly List<Vector2> _dataList = new List<Vector2>();
-
-        public Range? Range { get; private set; }
 
 
         public DataList(string category, Color? color = null)
@@ -47,6 +46,16 @@ namespace GBG.EditorDataGraph.Editor
         public void Clear()
         {
             _dataList.Clear();
+        }
+
+        public int FindIndex(Predicate<Vector2> match)
+        {
+            return _dataList.FindIndex(match);
+        }
+
+        public int FindLastIndex(Predicate<Vector2> match)
+        {
+            return _dataList.FindLastIndex(match);
         }
 
         public List<Vector2>.Enumerator GetEnumerator()

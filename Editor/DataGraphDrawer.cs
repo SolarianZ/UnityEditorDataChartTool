@@ -8,17 +8,55 @@ using UnityEngine.UIElements;
 
 namespace GBG.EditorDataGraph.Editor
 {
-    // TODO FIXME: Can't show horizontal linear
+    internal struct DataGraphScale
+    {
+        public bool Enabled;
+
+        public float XLength;
+
+        public float YMin;
+
+        public float YMax;
+
+
+        public DataGraphScale(float xLength, float yMin, float yMax, bool enabled)
+        {
+            XLength = xLength;
+            YMin = yMin;
+            YMax = yMax;
+            Enabled = enabled;
+        }
+
+        public void OverrideDataRange(ref float xMin, ref float xMax, ref float yMin, ref float yMax)
+        {
+            Assert.IsTrue(XLength > 0, $"{nameof(XLength)}({XLength:F5}) <= 0.");
+            Assert.IsTrue(YMin < YMax, $"{nameof(YMin)}({YMin:F5}) >= {nameof(YMax)}({YMax:F5}).");
+
+            xMax = xMin + XLength;
+            yMin = YMin;
+            yMax = YMax;
+        }
+
+        public override string ToString()
+        {
+            var state = Enabled ? "Enabled" : "Disabled";
+            return $"{state}, {nameof(XLength)}={XLength:F5}, {nameof(YMin)}={YMin:F5}, {nameof(YMax)}={YMax:F5}.";
+        }
+    }
+
     internal class DataGraphDrawer : VisualElement
     {
+        public byte PointRadius { get; set; } = 2;
+
         public ushort StartIndex { get; set; } = 0;
 
         public ushort EndIndex { get; set; } = ushort.MaxValue;
 
+        public ref DataGraphScale FixedScale => ref _fixedScale;
+
+        private DataGraphScale _fixedScale;
 
         private readonly List<DataList> _dataTable;
-
-        public readonly SliderInt _pointRadius;
 
         private Rect _graphBounds;
 
@@ -38,9 +76,6 @@ namespace GBG.EditorDataGraph.Editor
             style.flexGrow = 1;
             style.flexShrink = 0;
 
-            _pointRadius = new SliderInt("Radius", 1, 10) { value = 2, showInputField = true, };
-            Add(_pointRadius);
-
             var graphContainer = new IMGUIContainer(DrawDataGraph)
             {
                 style =
@@ -55,6 +90,56 @@ namespace GBG.EditorDataGraph.Editor
             graphContainer.RegisterCallback<GeometryChangedEvent>(evt => { _graphBounds = evt.newRect; });
             Add(graphContainer);
         }
+
+        public Rect GetDataBounds()
+        {
+            var hasPoint = false;
+            float xMin = default;
+            float xMax = default;
+            float yMin = default;
+            float yMax = default;
+
+            foreach (var dataList in _dataTable)
+            {
+                var dataCount = dataList.Count;
+                Assert.IsTrue(StartIndex <= EndIndex);
+
+                for (var i = StartIndex; i < dataCount && i <= EndIndex; i++)
+                {
+                    var point = dataList[i];
+                    if (!hasPoint || xMin > point.x) xMin = point.x;
+                    if (!hasPoint || xMax < point.x) xMax = point.x;
+                    if (!hasPoint || yMin > point.y) yMin = point.y;
+                    if (!hasPoint || yMax < point.y) yMax = point.y;
+                    hasPoint = true;
+                }
+            }
+
+            if (!hasPoint)
+            {
+                return Rect.zero;
+            }
+
+            // Ensure the width of bounds is not zero
+            if (Mathf.Approximately(xMin, xMax))
+            {
+                xMax = xMin + 1;
+            }
+
+            // Ensure the height of bounds is not zero
+            if (Mathf.Approximately(yMin, yMax))
+            {
+                yMax = yMin + 1;
+            }
+
+            if (FixedScale.Enabled)
+            {
+                FixedScale.OverrideDataRange(ref xMin, ref xMax, ref yMin, ref yMax);
+            }
+
+            return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        }
+
 
         private void DrawDataGraph()
         {
@@ -111,33 +196,46 @@ namespace GBG.EditorDataGraph.Editor
                 }
 
                 var normal = Vector3.forward;
-                var radius = _pointRadius.value;
                 Handles.color = dataList.Color;
 
+                var mousePos = Event.current.mousePosition;
                 var firstPoint = TransformPoint(dataList[0]);
-                Handles.DrawSolidDisc(firstPoint, normal, radius);
+                var expandedPointRadius = PointRadius * 1.5f;
+                if (!hover && (mousePos - firstPoint).sqrMagnitude <= expandedPointRadius * expandedPointRadius)
+                {
+                    hover = true;
+                    hoverData = dataList[0];
+                    hoverColor = dataList.Color;
+                    Handles.DrawSolidDisc(firstPoint, normal, expandedPointRadius);
+                }
+                else
+                {
+                    Handles.DrawSolidDisc(firstPoint, normal, PointRadius);
+                }
 
                 for (var i = StartIndex + 1; i < dataList.Count && i <= EndIndex; i++)
                 {
+                    // Line segment
                     var lineStart = TransformPoint(dataList[i - 1]);
                     var lineEnd = TransformPoint(dataList[i]);
                     Handles.DrawLine(lineStart, lineEnd);
 
-                    var mousePos = Event.current.mousePosition;
-                    if (!hover && (mousePos - lineEnd).sqrMagnitude <= radius * radius * 1.5f * 1.5f)
+                    // Expand the size of mouse hovered point
+                    if (!hover && (mousePos - lineEnd).sqrMagnitude <= expandedPointRadius * expandedPointRadius)
                     {
                         hover = true;
                         hoverData = dataList[i];
                         hoverColor = dataList.Color;
-                        Handles.DrawSolidDisc(lineEnd, normal, radius * 1.5f);
+                        Handles.DrawSolidDisc(lineEnd, normal, expandedPointRadius);
                     }
                     else
                     {
-                        Handles.DrawSolidDisc(lineEnd, normal, radius);
+                        Handles.DrawSolidDisc(lineEnd, normal, PointRadius);
                     }
                 }
             }
 
+            // Draw value of mouse hovered point
             if (hover)
             {
                 var hoverLabelPos = (xAxisStart + xAxisEnd) / 2 - new Vector2(axisLabelSize.x / 2, 0);
@@ -166,38 +264,12 @@ namespace GBG.EditorDataGraph.Editor
             }
         }
 
-        private Rect GetDataBounds()
-        {
-            var hasPoint = false;
-            float? xMin = null;
-            float? xMax = null;
-            float? yMin = null;
-            float? yMax = null;
-
-            foreach (var dataList in _dataTable)
-            {
-                var dataCount = dataList.Count;
-                Assert.IsTrue(StartIndex <= EndIndex);
-
-                for (var i = StartIndex; i < dataCount && i <= EndIndex; i++)
-                {
-                    var point = dataList[i];
-                    hasPoint = true;
-                    if (xMin == null || xMin > point.x) xMin = point.x;
-                    if (xMax == null || xMax < point.x) xMax = point.x;
-                    if (yMin == null || yMin > point.y) yMin = point.y;
-                    if (yMax == null || yMax < point.y) yMax = point.y;
-                }
-            }
-
-            if (!hasPoint)
-            {
-                return Rect.zero;
-            }
-
-            return Rect.MinMaxRect(xMin.Value, yMin.Value, xMax.Value, yMax.Value);
-        }
-
+        /// <summary>
+        /// Transform data point to window gui position.
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="lockAspect"></param>
+        /// <returns></returns>
         private Vector2 TransformPoint(Vector2 point, bool lockAspect = false)
         {
             var xScale = _graphBounds.width / _dataBounds.width;
