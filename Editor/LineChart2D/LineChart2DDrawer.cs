@@ -6,9 +6,9 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
-namespace GBG.EditorDataGraph.Editor
+namespace GBG.EditorDataChart.Editor.LineChart2D
 {
-    internal struct DataGraphScale
+    internal struct LineChartScale2D
     {
         public bool Enabled;
 
@@ -19,7 +19,7 @@ namespace GBG.EditorDataGraph.Editor
         public float YMax;
 
 
-        public DataGraphScale(float xLength, float yMin, float yMax, bool enabled)
+        public LineChartScale2D(float xLength, float yMin, float yMax, bool enabled)
         {
             XLength = xLength;
             YMin = yMin;
@@ -44,7 +44,7 @@ namespace GBG.EditorDataGraph.Editor
         }
     }
 
-    internal class DataGraphDrawer : VisualElement
+    internal class LineChart2DDrawer : VisualElement
     {
         public byte PointRadius { get; set; } = 2;
 
@@ -52,13 +52,13 @@ namespace GBG.EditorDataGraph.Editor
 
         public ushort EndIndex { get; set; } = ushort.MaxValue;
 
-        public ref DataGraphScale FixedScale => ref _fixedScale;
+        public ref LineChartScale2D FixedScale => ref _fixedScale;
 
-        private DataGraphScale _fixedScale;
+        private LineChartScale2D _fixedScale;
 
         private readonly List<DataList> _dataTable;
 
-        private Rect _graphBounds;
+        private Rect _chartBounds;
 
         private Rect _dataBounds;
 
@@ -69,14 +69,14 @@ namespace GBG.EditorDataGraph.Editor
         private GUIStyle _centerAlignedLabelStyle;
 
 
-        public DataGraphDrawer(List<DataList> dataTable)
+        public LineChart2DDrawer(List<DataList> dataTable)
         {
             _dataTable = dataTable;
 
             style.flexGrow = 1;
             style.flexShrink = 0;
 
-            var graphContainer = new IMGUIContainer(DrawDataGraph)
+            var chartContainer = new IMGUIContainer(DrawLineChart2D)
             {
                 style =
                 {
@@ -87,8 +87,8 @@ namespace GBG.EditorDataGraph.Editor
                     marginBottom = 20,
                 }
             };
-            graphContainer.RegisterCallback<GeometryChangedEvent>(evt => { _graphBounds = evt.newRect; });
-            Add(graphContainer);
+            chartContainer.RegisterCallback<GeometryChangedEvent>(evt => { _chartBounds = evt.newRect; });
+            Add(chartContainer);
         }
 
         public Rect GetDataBounds()
@@ -141,7 +141,7 @@ namespace GBG.EditorDataGraph.Editor
         }
 
 
-        private void DrawDataGraph()
+        private void DrawLineChart2D()
         {
             var baseColor = GetBaseColor();
             var originalGuiColor = GUI.color;
@@ -272,15 +272,15 @@ namespace GBG.EditorDataGraph.Editor
         /// <returns></returns>
         private Vector2 TransformPoint(Vector2 point, bool lockAspect = false)
         {
-            var xScale = _graphBounds.width / _dataBounds.width;
-            var yScale = _graphBounds.height / _dataBounds.height;
+            var xScale = _chartBounds.width / _dataBounds.width;
+            var yScale = _chartBounds.height / _dataBounds.height;
             var scale = lockAspect ? Vector2.one * Math.Min(xScale, yScale) : new Vector2(xScale, yScale);
             scale.y *= -1;
             var offset = point - _dataBounds.center;
             offset.Scale(scale);
 
             // Don't use windowBounds.center, transform point to window center
-            var windowCenter = _graphBounds.size / 2;
+            var windowCenter = _chartBounds.size / 2;
             var windowSpacePoint = windowCenter + offset;
 
             return windowSpacePoint;

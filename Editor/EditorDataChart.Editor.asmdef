@@ -1,6 +1,6 @@
 {
-    "name": "EditorDataGraph.Editor",
-    "rootNamespace": "GBG.EditorDataGraph.Editor",
+    "name": "EditorDataChart.Editor",
+    "rootNamespace": "GBG.EditorDataChart.Editor",
     "references": [],
     "includePlatforms": [
         "Editor"

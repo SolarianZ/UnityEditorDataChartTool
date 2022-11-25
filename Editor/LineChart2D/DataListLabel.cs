@@ -1,7 +1,7 @@
 ﻿using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace GBG.EditorDataGraph.Editor
+namespace GBG.EditorDataChart.Editor.LineChart2D
 {
     internal class DataListLabel : VisualElement
     {

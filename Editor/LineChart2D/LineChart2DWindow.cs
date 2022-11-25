@@ -6,18 +6,18 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace GBG.EditorDataGraph.Editor
+namespace GBG.EditorDataChart.Editor.LineChart2D
 {
-    public class DataGraphWindow2D : EditorWindow
+    public class LineChart2DWindow : EditorWindow
     {
         // ReSharper disable once Unity.IncorrectMethodSignature
-        [MenuItem("Tools/Bamboo/Editor Data Graph/2D Graph")]
-        public static DataGraphWindow2D Open()
+        [MenuItem("Tools/Bamboo/Editor Data Chart/Line Chart 2D")]
+        public static LineChart2DWindow Open()
         {
-            return GetWindow<DataGraphWindow2D>("Data Graph 2D");
+            return GetWindow<LineChart2DWindow>("Line Chart 2D");
         }
 
-        public static DataGraphWindow2D Open(string title)
+        public static LineChart2DWindow Open(string title)
         {
             var window = Open();
             window.titleContent = new GUIContent(title);
@@ -29,11 +29,11 @@ namespace GBG.EditorDataGraph.Editor
 
         private ToolbarToggle _lockScaleToggle;
 
-        private SliderInt _graphPointRadiusSlider;
+        private SliderInt _chartPointRadiusSlider;
 
         private ListView _categoryListView;
 
-        private DataGraphDrawer _graphDrawer;
+        private LineChart2DDrawer _chartDrawer;
 
         private MinMaxSlider _dataRangeSlider;
 
@@ -201,17 +201,17 @@ namespace GBG.EditorDataGraph.Editor
         #endregion
 
 
-        #region Graph Management
+        #region Chart Management
 
-        public void SetGraphScale(float xValueLength, float yMinValue, float yMaxValue)
+        public void SetChartScale(float xValueLength, float yMinValue, float yMaxValue)
         {
-            _graphDrawer.FixedScale = new DataGraphScale(xValueLength, yMinValue, yMaxValue, true);
+            _chartDrawer.FixedScale = new LineChartScale2D(xValueLength, yMinValue, yMaxValue, true);
             _lockScaleToggle.SetValueWithoutNotify(true);
         }
 
-        public void RemoveGraphScale()
+        public void RemoveChartScale()
         {
-            _graphDrawer.FixedScale.Enabled = false;
+            _chartDrawer.FixedScale.Enabled = false;
             _lockScaleToggle.SetValueWithoutNotify(false);
         }
 
@@ -238,9 +238,9 @@ namespace GBG.EditorDataGraph.Editor
             };
             // rootVisualElement.Add(_dataListView);
 
-            _graphDrawer = new DataGraphDrawer(_dataTable);
-            _graphDrawer.PointRadius = (byte)_graphPointRadiusSlider.value;
-            rootVisualElement.Add(_graphDrawer);
+            _chartDrawer = new LineChart2DDrawer(_dataTable);
+            _chartDrawer.PointRadius = (byte)_chartPointRadiusSlider.value;
+            rootVisualElement.Add(_chartDrawer);
 
             _dataRangeSlider = new MinMaxSlider("Range", 0, 1, 0, 1);
             _dataRangeSlider.labelElement.style.minWidth = 55;
@@ -266,8 +266,8 @@ namespace GBG.EditorDataGraph.Editor
 
         private void OnDataRangeChanged(ChangeEvent<Vector2> evt)
         {
-            var oldStartIndex = _graphDrawer.StartIndex;
-            var oldEndIndex = _graphDrawer.EndIndex;
+            var oldStartIndex = _chartDrawer.StartIndex;
+            var oldEndIndex = _chartDrawer.EndIndex;
             //var isLenghtChanged =
             CalcIndices(oldStartIndex, oldEndIndex, evt.newValue.x, evt.newValue.y,
                 out var newStartIndex, out var newEndIndex);
@@ -281,17 +281,17 @@ namespace GBG.EditorDataGraph.Editor
             // Let users choose when to lock state from toolbar
             // if (isLenghtChanged)
             // {
-            //     _graphDrawer.FixedScale.Enabled = false;
+            //     _chartDrawer.FixedScale.Enabled = false;
             // }
             // else
             // {
             //     // Translate indices, should lock scale
-            //     var dataRange = _graphDrawer.GetDataBounds();
-            //     _graphDrawer.FixedScale = new DataGraphScale(dataRange.width, dataRange.yMin, dataRange.yMax, true);
+            //     var dataRange = _chartDrawer.GetDataBounds();
+            //     _chartDrawer.FixedScale = new LineChartScale2D(dataRange.width, dataRange.yMin, dataRange.yMax, true);
             // }
 
-            _graphDrawer.StartIndex = (ushort)newStartIndex;
-            _graphDrawer.EndIndex = (ushort)newEndIndex;
+            _chartDrawer.StartIndex = (ushort)newStartIndex;
+            _chartDrawer.EndIndex = (ushort)newEndIndex;
             _dataRangeSlider.label = $"Range[{newStartIndex.ToString()},{newEndIndex.ToString()}]";
 
 
@@ -332,12 +332,12 @@ namespace GBG.EditorDataGraph.Editor
             _lockScaleToggle.RegisterValueChangedCallback(OnToolbarLockScaleToggleChanged);
             toolbar.Add(_lockScaleToggle);
 
-            _graphPointRadiusSlider = new SliderInt("Radius", 1, 10) { value = 2, showInputField = true, };
-            _graphPointRadiusSlider.labelElement.style.minWidth = 45;
-            _graphPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__drag-container").style.width = 40;
-            _graphPointRadiusSlider.Q<TextField>(className: "unity-base-slider__text-field").style.width = 22;
-            _graphPointRadiusSlider.RegisterValueChangedCallback(OnToolbarGraphPointRadiusSliderChanged);
-            toolbar.Add(_graphPointRadiusSlider);
+            _chartPointRadiusSlider = new SliderInt("Radius", 1, 10) { value = 2, showInputField = true, };
+            _chartPointRadiusSlider.labelElement.style.minWidth = 45;
+            _chartPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__drag-container").style.width = 40;
+            _chartPointRadiusSlider.Q<TextField>(className: "unity-base-slider__text-field").style.width = 22;
+            _chartPointRadiusSlider.RegisterValueChangedCallback(OnToolbarChartPointRadiusSliderChanged);
+            toolbar.Add(_chartPointRadiusSlider);
 
             return toolbar;
         }
@@ -358,18 +358,18 @@ namespace GBG.EditorDataGraph.Editor
         {
             if (evt.newValue)
             {
-                var dataRange = _graphDrawer.GetDataBounds();
-                _graphDrawer.FixedScale = new DataGraphScale(dataRange.width, dataRange.yMin, dataRange.yMax, true);
+                var dataRange = _chartDrawer.GetDataBounds();
+                _chartDrawer.FixedScale = new LineChartScale2D(dataRange.width, dataRange.yMin, dataRange.yMax, true);
             }
             else
             {
-                _graphDrawer.FixedScale.Enabled = false;
+                _chartDrawer.FixedScale.Enabled = false;
             }
         }
 
-        private void OnToolbarGraphPointRadiusSliderChanged(ChangeEvent<int> evt)
+        private void OnToolbarChartPointRadiusSliderChanged(ChangeEvent<int> evt)
         {
-            _graphDrawer.PointRadius = (byte)evt.newValue;
+            _chartDrawer.PointRadius = (byte)evt.newValue;
         }
 
         #endregion

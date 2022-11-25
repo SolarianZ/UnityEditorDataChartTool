@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace GBG.EditorDataGraph.Editor
+namespace GBG.EditorDataChart.Editor.LineChart2D
 {
     internal class DataList
     {
