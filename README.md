@@ -1,10 +1,11 @@
 # Unity Editor Data Chart Tool
 
+> Available in Unity 2019.4 but have some issues.
+
 Draw data chart in Unity Editor.
 
 ![Example](./Documents~/imgs/example_line_chart_2d.png)
 
-[中文](./README_CN.md)
 
 ## API
 
