@@ -27,7 +27,7 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             Enabled = enabled;
         }
 
-        public void OverrideDataRange(ref float xMin, ref float xMax, ref float yMin, ref float yMax)
+        public void OverrideDataRange(ref float xMin, out float xMax, out float yMin, out float yMax)
         {
             Assert.IsTrue(XLength > 0, $"{nameof(XLength)}({XLength:F5}) <= 0.");
             Assert.IsTrue(YMin < YMax, $"{nameof(YMin)}({YMin:F5}) >= {nameof(YMax)}({YMax:F5}).");
@@ -134,7 +134,7 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
 
             if (FixedScale.Enabled)
             {
-                FixedScale.OverrideDataRange(ref xMin, ref xMax, ref yMin, ref yMax);
+                FixedScale.OverrideDataRange(ref xMin, out xMax, out yMin, out yMax);
             }
 
             return Rect.MinMaxRect(xMin, yMin, xMax, yMax);

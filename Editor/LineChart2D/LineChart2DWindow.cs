@@ -48,7 +48,9 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             if (dataListIndex < 0)
             {
                 newDataList = true;
+#if UNITY_2021_1_OR_NEWER
                 dataListIndex = _dataTable.Count;
+#endif
                 dataList = new DataList(category);
                 _dataTable.Add(dataList);
             }
@@ -72,12 +74,16 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
         public void AddData(string category, Vector2 data)
         {
             DataList dataList;
+#if UNITY_2021_1_OR_NEWER
             var newDataList = false;
+#endif
             var dataListIndex = _dataTable.FindIndex(list => list.Category == category);
             if (dataListIndex < 0)
             {
+#if UNITY_2021_1_OR_NEWER
                 newDataList = true;
                 dataListIndex = _dataTable.Count;
+#endif
                 dataList = new DataList(category);
                 _dataTable.Add(dataList);
             }
@@ -355,17 +361,17 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             _chartPointRadiusSlider = new SliderInt("Radius", 1, 10)
             {
                 value = 2,
-#if UNITY_2021_1_OR_NEWER
-                showInputField = true,
-#endif
             };
             _chartPointRadiusSlider.labelElement.style.minWidth = 45;
 #if UNITY_2021_1_OR_NEWER
             _chartPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__drag-container").style.width = 40;
             _chartPointRadiusSlider.Q<TextField>(className: "unity-base-slider__text-field").style.width = 22;
+#else
+            _chartPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__input").style.width = 40;
 #endif
             _chartPointRadiusSlider.RegisterValueChangedCallback(OnToolbarChartPointRadiusSliderChanged);
             toolbar.Add(_chartPointRadiusSlider);
+            UpdateToolbarChartPointRadiusSliderTitle();
 
             return toolbar;
         }
@@ -398,6 +404,12 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
         private void OnToolbarChartPointRadiusSliderChanged(ChangeEvent<int> evt)
         {
             _chartDrawer.PointRadius = (byte)evt.newValue;
+            UpdateToolbarChartPointRadiusSliderTitle();
+        }
+
+        private void UpdateToolbarChartPointRadiusSliderTitle()
+        {
+            _chartPointRadiusSlider.label = $"Radius({_chartPointRadiusSlider.value})";
         }
 
         #endregion
