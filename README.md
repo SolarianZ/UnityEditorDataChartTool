@@ -6,6 +6,19 @@ Draw data chart in Unity Editor.
 
 [中文](./README_CN.md)
 
+
+## Supported Unity Version
+
+Unity 2021.3 and later.
+
+
+## Installation
+
+[![openupm](https://img.shields.io/npm/v/com.greenbamboogames.editordatachart?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.greenbamboogames.editordatachart/)
+
+Install this package via [OpenUPM](https://openupm.com/packages/com.greenbamboogames.editordatachart) .
+
+
 ## API
 
 - class LineChart2DWindow
