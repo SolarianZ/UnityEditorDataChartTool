@@ -25,7 +25,7 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
         }
 
 
-        private readonly List<DataList> _dataTable = new List<DataList>();
+        private readonly List<DataList> _dataTable = new();
 
         private ToolbarToggle _lockScaleToggle;
 
@@ -48,9 +48,7 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             if (dataListIndex < 0)
             {
                 newDataList = true;
-#if UNITY_2021_1_OR_NEWER
                 dataListIndex = _dataTable.Count;
-#endif
                 dataList = new DataList(category);
                 _dataTable.Add(dataList);
             }
@@ -63,27 +61,19 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
 
             if (!newDataList)
             {
-#if UNITY_2021_1_OR_NEWER
                 _categoryListView.RefreshItem(dataListIndex);
-#else
-                _categoryListView.Refresh();
-#endif
             }
         }
 
         public void AddData(string category, Vector2 data)
         {
             DataList dataList;
-#if UNITY_2021_1_OR_NEWER
             var newDataList = false;
-#endif
             var dataListIndex = _dataTable.FindIndex(list => list.Category == category);
             if (dataListIndex < 0)
             {
-#if UNITY_2021_1_OR_NEWER
                 newDataList = true;
                 dataListIndex = _dataTable.Count;
-#endif
                 dataList = new DataList(category);
                 _dataTable.Add(dataList);
             }
@@ -99,7 +89,6 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
                                  $"index={dataList.Count - 1}, value=({data.x:F5}, {data.y:F5}).");
             }
 
-#if UNITY_2021_1_OR_NEWER
             if (newDataList)
             {
                 _categoryListView.RefreshItems();
@@ -108,9 +97,6 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             {
                 _categoryListView.RefreshItem(dataListIndex);
             }
-#else
-            _categoryListView.Refresh();
-#endif
 
             OnDataListChanged(dataList.Count, false);
         }
@@ -133,19 +119,11 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             if (_dataTable[dataListIndex].Count == 0)
             {
                 _dataTable.RemoveAt(dataListIndex);
-#if UNITY_2021_1_OR_NEWER
                 _categoryListView.RefreshItems();
-#else
-                _categoryListView.Refresh();
-#endif
             }
             else
             {
-#if UNITY_2021_1_OR_NEWER
                 _categoryListView.RefreshItem(dataListIndex);
-#else
-                _categoryListView.Refresh();
-#endif
             }
 
             OnDataListChanged(dataList.Count, true);
@@ -251,13 +229,9 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
 
             _categoryListView = new ListView
             {
-#if UNITY_2021_1_OR_NEWER
                 showBorder = true,
                 reorderable = false,
                 fixedItemHeight = 20,
-#else
-                itemHeight = 20,
-#endif
                 itemsSource = _dataTable,
                 makeItem = MakeDataListViewItem,
                 bindItem = BindDataListViewItem,
@@ -358,17 +332,11 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             _lockScaleToggle.RegisterValueChangedCallback(OnToolbarLockScaleToggleChanged);
             toolbar.Add(_lockScaleToggle);
 
-            _chartPointRadiusSlider = new SliderInt("Radius", 1, 10)
-            {
-                value = 2,
-            };
+            _chartPointRadiusSlider = new SliderInt("Radius", 1, 10) { value = 2, };
             _chartPointRadiusSlider.labelElement.style.minWidth = 45;
-#if UNITY_2021_1_OR_NEWER
             _chartPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__drag-container").style.width = 40;
-            _chartPointRadiusSlider.Q<TextField>(className: "unity-base-slider__text-field").style.width = 22;
-#else
-            _chartPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__input").style.width = 40;
-#endif
+            // _chartPointRadiusSlider.Q<VisualElement>(className: "unity-base-slider__input").style.width = 40;
+            // _chartPointRadiusSlider.Q<TextField>(className: "unity-base-slider__text-field").style.width = 22;
             _chartPointRadiusSlider.RegisterValueChangedCallback(OnToolbarChartPointRadiusSliderChanged);
             toolbar.Add(_chartPointRadiusSlider);
             UpdateToolbarChartPointRadiusSliderTitle();

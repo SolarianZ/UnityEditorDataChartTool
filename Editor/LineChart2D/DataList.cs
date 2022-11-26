@@ -21,7 +21,7 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             set => _dataList[index] = value;
         }
 
-        private readonly List<Vector2> _dataList = new List<Vector2>();
+        private readonly List<Vector2> _dataList = new();
 
 
         public DataList(string category, Color? color = null)
