@@ -14,7 +14,7 @@ Unity 2021.3 或更新版本。
 
 ## 安装
 
-[![openupm](https://img.shields.io/npm/v/com.greenbamboogames.editordatachart?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/cn.greenbamboogames.editordatachart/)
+[![openupm](https://img.shields.io/npm/v/com.greenbamboogames.editordatachart?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.cn/packages/com.greenbamboogames.editordatachart/)
 
 从 [OpenUPM](https://openupm.cn/packages/com.greenbamboogames.editordatachart) 安装。
 
