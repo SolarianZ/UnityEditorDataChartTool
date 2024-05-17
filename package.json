@@ -1,17 +1,20 @@
 {
   "name": "com.greenbamboogames.editordatachart",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Editor Data Chart!",
   "description": "Draw data chart in Unity Editor.",
   "unity": "2021.3",
   "documentationUrl": "https://github.com/SolarianZ/UnityEditorDataChartTool/blob/main/README.md",
   "changelogUrl": "https://github.com/SolarianZ/UnityEditorDataChartTool/releases",
   "licensesUrl": "https://github.com/SolarianZ/UnityEditorDataChartTool/blob/main/LICENSE",
-  "keywords": [],
+  "keywords": [
+    "Data",
+    "Chart"
+  ],
   "author": {
-    "name": "GBG",
+    "name": "ZQY",
     "email": "vdergow@hotmail.com",
-    "url": ""
+    "url": "https://github.com/SolarianZ"
   },
   "type": "tool",
   "hideInEditor": false

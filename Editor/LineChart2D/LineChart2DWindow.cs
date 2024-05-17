@@ -253,6 +253,14 @@ namespace GBG.EditorDataChart.Editor.LineChart2D
             Repaint();
         }
 
+        private void ShowButton(Rect position)
+        {
+            if (GUI.Button(position, EditorGUIUtility.IconContent("_Help"), GUI.skin.FindStyle("IconButton")))
+            {
+                Application.OpenURL("https://github.com/SolarianZ/UnityEditorDataChartTool");
+            }
+        }
+
         private VisualElement MakeDataListViewItem()
         {
             return new DataListLabel();
